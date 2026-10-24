@@ -4,21 +4,20 @@
 -- ============================================================================
 
 -- LIMPIEZA DE TABLAS Y VISTAS PREVIAS (Opcional, descomentar si es necesario)
--- DROP VIEW V_LUGAR_PUNTUACION_MEDIA;
--- DROP TABLE RESPUESTA CASCADE CONSTRAINTS;
--- DROP TABLE ME_GUSTA CASCADE CONSTRAINTS;
--- DROP TABLE RESENA CASCADE CONSTRAINTS;
--- DROP TABLE FOTOGRAFIA CASCADE CONSTRAINTS;
--- DROP TABLE HORARIO CASCADE CONSTRAINTS;
--- DROP TABLE LUGAR_CATEGORIA_SECUNDARIA CASCADE CONSTRAINTS;
--- DROP TABLE LUGAR CASCADE CONSTRAINTS;
--- DROP TABLE CATEGORIA CASCADE CONSTRAINTS;
--- DROP TABLE CUENTA_PROPIETARIA CASCADE CONSTRAINTS;
--- DROP TABLE CUENTA_GUIA_LOCAL CASCADE CONSTRAINTS;
--- DROP TABLE CUENTA_TELEFONO CASCADE CONSTRAINTS;
--- DROP TABLE CUENTA CASCADE CONSTRAINTS;
--- DROP TABLE LUGAR_TELEFONO CASCADE CONSTRAINTS;
--- DROP TABLE LUGAR_WEB CASCADE CONSTRAINTS;
+DROP TABLE RESPUESTA CASCADE CONSTRAINTS;
+DROP TABLE ME_GUSTA CASCADE CONSTRAINTS;
+DROP TABLE RESENA CASCADE CONSTRAINTS;
+DROP TABLE FOTOGRAFIA CASCADE CONSTRAINTS;
+DROP TABLE HORARIO CASCADE CONSTRAINTS;
+DROP TABLE LUGAR_CATEGORIA_SECUNDARIA CASCADE CONSTRAINTS;
+DROP TABLE LUGAR CASCADE CONSTRAINTS;
+DROP TABLE CATEGORIA CASCADE CONSTRAINTS;
+DROP TABLE CUENTA_PROPIETARIA CASCADE CONSTRAINTS;
+DROP TABLE CUENTA_GUIA_LOCAL CASCADE CONSTRAINTS;
+DROP TABLE CUENTA_TELEFONO CASCADE CONSTRAINTS;
+DROP TABLE CUENTA CASCADE CONSTRAINTS;
+DROP TABLE LUGAR_TELEFONO CASCADE CONSTRAINTS;
+DROP TABLE LUGAR_WEB CASCADE CONSTRAINTS;
 
 -- ============================================================================
 -- 1. TABLAS MAESTRAS Y JERARQUÍA DE CUENTAS
@@ -43,7 +42,7 @@ CREATE TABLE CUENTA_TELEFONO (
     id_cuenta        NUMBER NOT NULL,
     telefono         VARCHAR2(30) NOT NULL,
     CONSTRAINT PK_CUENTA_TELEFONO PRIMARY KEY (id_cuenta, telefono),
-    CONSTRAINT FK_TELEFONO_CUENTA FOREIGN KEY (id_cuenta) 
+    CONSTRAINT FK_TELEFONO_CUENTA FOREIGN KEY (id_cuenta)
         REFERENCES CUENTA(id_cuenta) ON DELETE CASCADE
 );
 
@@ -53,7 +52,7 @@ CREATE TABLE CUENTA_GUIA_LOCAL (
     fecha_ingreso    DATE DEFAULT SYSDATE NOT NULL,
     -- Restricciones estructurales
     CONSTRAINT PK_CUENTA_GUIA_LOCAL PRIMARY KEY (id_cuenta),
-    CONSTRAINT FK_GUIA_CUENTA FOREIGN KEY (id_cuenta) 
+    CONSTRAINT FK_GUIA_CUENTA FOREIGN KEY (id_cuenta)
         REFERENCES CUENTA(id_cuenta) ON DELETE CASCADE,
     CONSTRAINT CK_GUIA_NIVEL CHECK (nivel BETWEEN 1 AND 8)
 );
@@ -66,7 +65,7 @@ CREATE TABLE CUENTA_PROPIETARIA (
     fecha_verificacion  DATE,
     -- Restricciones estructurales
     CONSTRAINT PK_CUENTA_PROPIETARIA PRIMARY KEY (id_cuenta),
-    CONSTRAINT FK_PROPIETARIA_CUENTA FOREIGN KEY (id_cuenta) 
+    CONSTRAINT FK_PROPIETARIA_CUENTA FOREIGN KEY (id_cuenta)
         REFERENCES CUENTA(id_cuenta) ON DELETE CASCADE,
     CONSTRAINT CK_PROPIETARIA_RUT CHECK (REGEXP_LIKE(rut, '^[0-9]{12}$')), -- Exactamente 12 dígitos numéricos
     CONSTRAINT CK_PROPIETARIA_METODO CHECK (metodo_verificacion IN ('Postal', 'Telefónico', 'Video'))
@@ -94,6 +93,7 @@ CREATE TABLE LUGAR (
     pais                    VARCHAR2(100) NOT NULL,
     latitud                 NUMBER(10, 7) NOT NULL,
     longitud                NUMBER(10, 7) NOT NULL,
+    puntos                 number(3, 2) DEFAULT 0,
     estado                  VARCHAR2(25) DEFAULT 'Operativo' NOT NULL,
     id_categoria_principal  NUMBER NOT NULL,
     id_lugar_contenedor     NUMBER,
@@ -101,11 +101,11 @@ CREATE TABLE LUGAR (
     -- Restricciones
     CONSTRAINT PK_LUGAR PRIMARY KEY (id_lugar),
     CONSTRAINT CK_LUGAR_ESTADO CHECK (estado IN ('Operativo', 'Cerrado temporalmente', 'Cerrado definitivamente')),
-    CONSTRAINT FK_LUGAR_CATEGORIA FOREIGN KEY (id_categoria_principal) 
+    CONSTRAINT FK_LUGAR_CATEGORIA FOREIGN KEY (id_categoria_principal)
         REFERENCES CATEGORIA(id_categoria),
-    CONSTRAINT FK_LUGAR_CONTENEDOR FOREIGN KEY (id_lugar_contenedor) 
+    CONSTRAINT FK_LUGAR_CONTENEDOR FOREIGN KEY (id_lugar_contenedor)
         REFERENCES LUGAR(id_lugar),
-    CONSTRAINT FK_LUGAR_ADMINISTRADOR FOREIGN KEY (id_cuenta_admin) 
+    CONSTRAINT FK_LUGAR_ADMINISTRADOR FOREIGN KEY (id_cuenta_admin)
         REFERENCES CUENTA_PROPIETARIA(id_cuenta) ON DELETE SET NULL,
     -- No Autocontención
     CONSTRAINT CK_LUGAR_NO_AUTOCONTENCION CHECK (id_lugar_contenedor IS NULL OR (id_lugar_contenedor <> id_lugar))
@@ -116,7 +116,7 @@ CREATE TABLE LUGAR_TELEFONO (
     id_lugar        NUMBER NOT NULL,
     telefono         VARCHAR2(30) NOT NULL,
     CONSTRAINT PK_LUGAR_TELEFONO PRIMARY KEY (id_lugar, telefono),
-    CONSTRAINT FK_TELEFONO_LUGAR FOREIGN KEY (id_lugar) 
+    CONSTRAINT FK_TELEFONO_LUGAR FOREIGN KEY (id_lugar)
         REFERENCES LUGAR(id_lugar) ON DELETE CASCADE
 );
 
@@ -125,7 +125,7 @@ CREATE TABLE LUGAR_WEB (
     id_lugar        NUMBER NOT NULL,
     web         VARCHAR2(100) NOT NULL,
     CONSTRAINT PK_LUGAR_WEB PRIMARY KEY (id_lugar, web),
-    CONSTRAINT FK_WEB_LUGAR FOREIGN KEY (id_lugar) 
+    CONSTRAINT FK_WEB_LUGAR FOREIGN KEY (id_lugar)
         REFERENCES LUGAR(id_lugar) ON DELETE CASCADE
 );
 
@@ -150,7 +150,7 @@ CREATE TABLE HORARIO (
     hora_cierre      TIMESTAMP NOT NULL,
     -- Restricciones de Entidad Débil
     CONSTRAINT PK_HORARIO PRIMARY KEY (id_lugar, dia_semana, hora_apertura),
-    CONSTRAINT FK_HORARIO_LUGAR FOREIGN KEY (id_lugar) 
+    CONSTRAINT FK_HORARIO_LUGAR FOREIGN KEY (id_lugar)
         REFERENCES LUGAR(id_lugar) ON DELETE CASCADE,
     -- Coherencia Horaria
     CONSTRAINT CK_HORARIO_COHERENCIA CHECK (hora_cierre > hora_apertura)
@@ -158,17 +158,17 @@ CREATE TABLE HORARIO (
 
 CREATE TABLE FOTOGRAFIA (
     id_lugar         NUMBER NOT NULL,
-    numero_foto      NUMBER NOT NULL, 
+    numero_foto      NUMBER NOT NULL,
     url_fotografia   VARCHAR2(500) NOT NULL,
     fecha_tomada     DATE,
     fecha_subida     DATE DEFAULT TRUNC(SYSDATE) NOT NULL,
     descripcion      VARCHAR2(255),
-    id_cuenta_sube   NUMBER, 
+    id_cuenta_sube   NUMBER,
     -- Restricciones
     CONSTRAINT PK_FOTOGRAFIA PRIMARY KEY (id_lugar, numero_foto),
-    CONSTRAINT FK_FOTOGRAFIA_LUGAR FOREIGN KEY (id_lugar) 
+    CONSTRAINT FK_FOTOGRAFIA_LUGAR FOREIGN KEY (id_lugar)
         REFERENCES LUGAR(id_lugar) ON DELETE CASCADE,
-    CONSTRAINT FK_FOTOGRAFIA_CUENTA FOREIGN KEY (id_cuenta_sube) 
+    CONSTRAINT FK_FOTOGRAFIA_CUENTA FOREIGN KEY (id_cuenta_sube)
         REFERENCES CUENTA(id_cuenta) ON DELETE SET NULL
 );
 
@@ -196,8 +196,8 @@ CREATE TABLE RESENA (
 
 CREATE TABLE ME_GUSTA (
     id_me_gusta      NUMBER GENERATED BY DEFAULT AS IDENTITY, -- Clave Primaria Única
-    id_cuenta_mg     NUMBER NOT NULL, 
-    id_resena        NUMBER NOT NULL, 
+    id_cuenta_mg     NUMBER NOT NULL,
+    id_resena        NUMBER NOT NULL,
     fecha            DATE DEFAULT TRUNC(SYSDATE) NOT NULL,
     -- Restricciones
     CONSTRAINT PK_ME_GUSTA PRIMARY KEY (id_me_gusta),
@@ -209,8 +209,8 @@ CREATE TABLE ME_GUSTA (
 
 CREATE TABLE RESPUESTA (
     id_respuesta        NUMBER GENERATED BY DEFAULT AS IDENTITY, -- Clave Primaria Única
-    id_resena           NUMBER NOT NULL, 
-    id_cuenta_prop      NUMBER NOT NULL, 
+    id_resena           NUMBER NOT NULL,
+    id_cuenta_prop      NUMBER NOT NULL,
     texto               VARCHAR2(255) NOT NULL,
     fecha_publicacion   DATE DEFAULT TRUNC(SYSDATE) NOT NULL,
     -- Restricciones
@@ -247,10 +247,10 @@ FOR EACH ROW
 DECLARE
     v_cantidad NUMBER;
 BEGIN
-    SELECT COUNT(1) INTO v_cantidad 
-    FROM RESENA 
+    SELECT COUNT(1) INTO v_cantidad
+    FROM RESENA
     WHERE id_cuenta = :new.id_cuenta AND TRUNC(fecha) = TRUNC(:new.fecha);
-    
+
     IF v_cantidad >= 5 THEN
         RAISE_APPLICATION_ERROR(-20002, 'Error: Se ha alcanzado el límite máximo de 5 reseñas diarias por cuenta.');
     END IF;
@@ -279,7 +279,7 @@ DECLARE
     v_id_autor_resena RESENA.id_cuenta%TYPE;
 BEGIN
     SELECT id_cuenta INTO v_id_autor_resena FROM RESENA WHERE id_resena = :new.id_resena;
-    
+
     IF :new.id_cuenta_mg = v_id_autor_resena THEN
         RAISE_APPLICATION_ERROR(-20006, 'Error: Un usuario no puede dar Me Gusta a su propia reseña.');
     END IF;
@@ -294,7 +294,7 @@ DECLARE
     v_fecha_resena DATE;
 BEGIN
     SELECT fecha INTO v_fecha_resena FROM RESENA WHERE id_resena = :new.id_resena;
-    
+
     IF :new.fecha_publicacion < v_fecha_resena THEN
         RAISE_APPLICATION_ERROR(-20004, 'Error: La respuesta no puede tener una fecha anterior a la de la reseña.');
     END IF;
@@ -308,25 +308,227 @@ FOR EACH ROW
 DECLARE
     v_id_admin LUGAR.id_cuenta_admin%TYPE;
 BEGIN
-    SELECT l.id_cuenta_admin INTO v_id_admin 
+    SELECT l.id_cuenta_admin INTO v_id_admin
     FROM RESENA r
     JOIN LUGAR l ON r.id_lugar = l.id_lugar
     WHERE r.id_resena = :new.id_resena;
-    
+
     IF v_id_admin IS NULL OR v_id_admin <> :new.id_cuenta_prop THEN
         RAISE_APPLICATION_ERROR(-20005, 'Error: Solo el propietario administrador asignado a este lugar puede responder.');
     END IF;
 END;
 /
 
+-- Recalcula los promedios después de cada sentencia que modifica reseñas.
+-- TODO: esto me gustaria hacer algo mas prolijo.
+CREATE OR REPLACE TRIGGER TRG_RESENA_LUGAR
+    AFTER INSERT OR UPDATE ON RESENA
+BEGIN
+    UPDATE LUGAR l
+    SET puntos = (
+        SELECT NVL(AVG(r.puntaje), 0)
+        FROM RESENA r
+        JOIN CUENTA c ON c.id_cuenta = r.id_cuenta
+        WHERE r.id_lugar = l.id_lugar
+          AND c.estado <> 'Suspendida'
+    );
+END;
+/
+
+
 -- ============================================================================
--- 6. VISTAS DE AGREGACIÓN EN TIEMPO REAL
+-- 6. PLSQL
 -- ============================================================================
 
--- Exclusión de Cuentas Suspendidas del cálculo de la puntuación media
-CREATE OR REPLACE VIEW V_LUGAR_PUNTUACION_MEDIA AS
-SELECT r.id_lugar, AVG(r.puntaje) AS puntuacion_media
-FROM RESENA r
-JOIN CUENTA c ON r.id_cuenta = c.id_cuenta
-WHERE c.estado <> 'Suspendida'
-GROUP BY r.id_lugar;
+-- Requerimiento 2.2
+-- Implementar un servicio que permita la transferencia de la titularidad de un lugar entre dos cuentas.
+-- Se debe verificar que la cuenta que transfiere sea realmente la que administra el lugar y que ambas
+-- se encuentren correctamente habilitadas para la transferencia.
+
+-- Detalle de IMPL
+-- Si no se mandan los params necesarios se devuelve error.
+-- Si la cuenta de origen no es propietaria del lugar se devuelve error
+-- Si la cuenta de destino no tiene rol propietario se devuelve error
+-- Si la cuenta de destino no tiene fecha de verificación se devuelve error.
+create or replace procedure PRC_transferir_titularidad(
+    lugar_id IN LUGAR.ID_LUGAR%type,
+    cuenta_id_destino in CUENTA.ID_CUENTA%type,
+    cuenta_id_origen in CUENTA.ID_CUENTA%type
+) as
+    admin_actual LUGAR.ID_CUENTA_ADMIN%type;
+    fecha_verificacion CUENTA_PROPIETARIA.FECHA_VERIFICACION%type;
+    LUGAR_SIN_ADMIN_ERR Exception;
+    LUGAR_REQ_ERR Exception;
+    CUENTA_DESTINO_REQ_ERR Exception;
+    CUENTA_ORIGEN_REQ_ERR Exception;
+    CUENTA_DESTINO_NO_VERIF_ERR Exception;
+    CUENTA_ORIGEN_ERR Exception;
+begin
+    if( lugar_id is null ) then
+        raise LUGAR_REQ_ERR;
+    elsif (cuenta_id_destino is null) then
+        raise CUENTA_DESTINO_REQ_ERR;
+    elsif (cuenta_id_origen is null) then
+        raise CUENTA_ORIGEN_REQ_ERR;
+    end if;
+
+    SELECT l.ID_CUENTA_ADMIN into admin_actual FROM LUGAR l WHERE l.ID_LUGAR = lugar_id;
+
+    if(admin_actual is null ) then
+        raise LUGAR_SIN_ADMIN_ERR;
+    elsif (admin_actual <> cuenta_id_origen) then
+        raise CUENTA_ORIGEN_ERR;
+    end if;
+
+    SELECT cd.FECHA_VERIFICACION into fecha_verificacion from CUENTA_PROPIETARIA cd where cd.ID_CUENTA = cuenta_id_destino;
+
+    if (fecha_verificacion is null) then
+        raise CUENTA_DESTINO_NO_VERIF_ERR;
+    end if;
+
+    UPDATE LUGAR l set l.ID_CUENTA_ADMIN = cuenta_id_destino where l.ID_LUGAR = lugar_id;
+
+EXCEPTION
+    when LUGAR_REQ_ERR then
+        raise_application_error(-20010, 'El campo lugar_id es requerido');
+    when CUENTA_DESTINO_REQ_ERR then
+        raise_application_error(-20011, 'El campo cuenta_id_destino es requerido');
+    when CUENTA_ORIGEN_REQ_ERR then
+        raise_application_error(-20012, 'El campo cuenta_id_origen es requerido');
+    when LUGAR_SIN_ADMIN_ERR then
+        raise_application_error(-20013, 'El lugar debe contar con un administrador actual para hacer una transferencia');
+    when CUENTA_DESTINO_NO_VERIF_ERR then
+        raise_application_error(-20014,'La cuenta de destino no ha sido verificada como propietaria.');
+    when CUENTA_ORIGEN_ERR then
+        raise_application_error(-20015,'La cuenta de origen no es propietaria del lugar.');
+end;
+
+-- Funcion auxiliar para centralizar la logica de calculo puntos de una cuenta.
+CREATE OR REPLACE FUNCTION fn_calcular_puntos_lugar(id_lugar LUGAR.ID_LUGAR%type)
+    RETURN LUGAR.PUNTOS%type is puntosLugar LUGAR.PUNTOS%type;
+begin
+    SELECT NVL(avg(r.puntaje),0) INTO puntosLugar FROM RESENA r -- Controla el caso de que la consulta no tenga ningun registro a devolver y transforma el NULL en 0.
+        JOIN CUENTA c ON c.ID_CUENTA = r.ID_CUENTA
+    WHERE c.estado <> 'Suspendida' AND r.ID_LUGAR = id_lugar;
+    return puntosLugar;
+end;
+
+
+-- Requerimiento 2.4
+-- Implementar un servicio que permita suspender una cuenta. En el caso de que la cuenta
+-- tenga reseñas, se debe actualizar la puntuación de los lugares correspondientes.
+
+-- Detalle IMPL
+-- Si cuenta es nulo error
+-- si cuenta estado es null o suspendida error
+-- sino se cambia el estado de cuenta y se actualizan los puntos de cada lugar asociado a la cuenta modificada
+create or replace procedure PRC_suspender_cuenta(
+    cuenta_id CUENTA.ID_CUENTA%type
+) as
+    cuenta_estado CUENTA.ESTADO%type;
+    existe_cuenta number;
+    CUENTA_ESTADO_ERR EXCEPTION;
+    CUENTA_NOT_FOUND EXCEPTION;
+    CUENTA_REQ EXCEPTION;
+begin
+    if(cuenta_id is null) then
+        raise CUENTA_REQ;
+    end if;
+
+
+    SELECT count(*) INTO existe_cuenta FROM CUENTA c WHERE c.ID_CUENTA = cuenta_id;
+    if(existe_cuenta = 0) then
+        raise CUENTA_NOT_FOUND;
+    end if;
+
+    SELECT c.ESTADO INTO cuenta_estado FROM CUENTA c WHERE c.ID_CUENTA = cuenta_id;
+    if (cuenta_estado = 'Suspendida') then
+        raise CUENTA_ESTADO_ERR;
+    end if;
+
+    UPDATE CUENTA c SET c.ESTADO = 'Suspendida' WHERE c.ID_CUENTA = cuenta_id;
+
+    for tupla in (select distinct(r.ID_LUGAR) from RESENA r where r.ID_CUENTA = cuenta_id) loop
+            update LUGAR l set l.PUNTOS = fn_calcular_puntos_lugar(tupla.id_lugar) where l.ID_LUGAR = tupla.id_lugar;
+        end loop;
+
+EXCEPTION
+    when CUENTA_REQ then
+        raise_application_error(-20020, 'El campo cuenta_id es requerido');
+    when CUENTA_NOT_FOUND then
+        raise_application_error(-20021, 'La cuenta no existe en el sistema');
+    when CUENTA_ESTADO_ERR then
+        raise_application_error(-20022, 'La cuenta ya tiene estado suspendido en el sistema');
+end;
+
+-- Requerimiento 2.5
+-- Implementar un servicio que permita a una cuenta publicar una reseña sobre un lugar.
+-- El servicio debe retornar la puntuación media del lugar una vez registrada la reseña.
+
+-- Detalle de IMPL
+-- si cuenta es null o no existe error
+-- si lugar es null o no existe error
+-- si param es null o vacío error
+-- si puntos es null, menor a 1 o mayor a 5 error
+-- si idioma es null o vacío error
+-- si no hay errores se hace un upsert de la resena.
+CREATE OR REPLACE PROCEDURE PRC_INGRESAR_RESENA(
+    param_id_cuenta IN RESENA.ID_CUENTA%type,
+    param_id_lugar IN RESENA.ID_LUGAR%type,
+    param_descripcion IN RESENA.TEXTO%type,
+    param_idioma IN RESENA.IDIOMA%type,
+    param_puntos IN RESENA.PUNTAJE%type,
+    puntaje_avg OUT LUGAR.puntos%type
+) as
+    cuenta_not_found Exception;
+    lugar_not_found Exception;
+    puntos_error Exception;
+    desc_error EXCEPTION;
+    idioma_error Exception;
+    existe_cuenta number;
+    existe_lugar number;
+    hayResena number;
+begin
+    select count(*) into existe_cuenta from CUENTA c where c.ID_CUENTA = param_id_cuenta;
+    if(param_id_cuenta is null or existe_cuenta = 0 ) then
+        raise cuenta_not_found;
+    end if;
+
+    select count(*) into existe_lugar from LUGAR l where l.ID_LUGAR = param_id_lugar;
+    if(param_id_lugar is null or existe_lugar = 0 ) then
+        raise lugar_not_found;
+    end if;
+    if(param_descripcion is null or trim(param_descripcion) = '' ) then
+        raise desc_error;
+    end if;
+    if(param_puntos is null or param_puntos <= 0 or param_puntos > 5 ) then
+        raise puntos_error;
+    end if;
+    if(param_idioma is null or trim(param_idioma) = '' ) then
+        raise idioma_error;
+    end if;
+
+    select count(*) into hayResena from RESENA r where r.ID_CUENTA = param_id_cuenta and r.ID_LUGAR = param_id_lugar;
+    if (hayResena = 0) then
+        insert into RESENA (ID_CUENTA, ID_LUGAR, PUNTAJE, TEXTO, IDIOMA) values
+            (param_id_cuenta, param_id_lugar, param_puntos, param_descripcion, param_idioma);
+    else
+        update RESENA r set r.idioma = param_idioma, r.puntaje = param_puntos, r.texto = param_descripcion, r.FECHA = sysdate
+                        WHERE r.ID_CUENTA = param_id_cuenta and r.ID_LUGAR = param_id_lugar;
+    end if;
+
+    -- Ante de llegar aca ya tendría que haber ejecutado el trigger TRG_RESENA_LUGAR
+    select l.PUNTOS into puntaje_avg from LUGAR l where l.ID_LUGAR = param_id_lugar;
+
+EXCEPTION
+    when cuenta_not_found then
+        raise_application_error(-20030, 'Cuenta no encontrada');
+    when lugar_not_found then
+        raise_application_error(-20031, 'Lugar no encontrada');
+    when puntos_error then
+        raise_application_error(-20032, 'Los puntos de la reseña deben ser entre 1 y 5');
+    when desc_error then
+        raise_application_error(-20033, 'La descripción no puede ser nula ni vacía');
+    when idioma_error then
+        raise_application_error(-20034, 'El idioma no puede ser nulo ni vacío');
+end;
