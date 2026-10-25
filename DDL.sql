@@ -48,7 +48,8 @@ CREATE TABLE CUENTA_TELEFONO (
 
 CREATE TABLE CUENTA_GUIA_LOCAL (
     id_cuenta        NUMBER NOT NULL,
-    nivel            NUMBER(1,0) NOT NULL,
+    puntos			 NUMBER(6,0) DEFAULT 0 NOT NULL,
+    nivel            NUMBER(1,0) DEFAULT 1 NOT NULL,
     fecha_ingreso    DATE DEFAULT SYSDATE NOT NULL,
     -- Restricciones estructurales
     CONSTRAINT PK_CUENTA_GUIA_LOCAL PRIMARY KEY (id_cuenta),

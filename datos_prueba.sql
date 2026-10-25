@@ -212,7 +212,7 @@ INSERT INTO RESENA (id_cuenta, id_lugar, puntaje, texto, fecha, idioma) VALUES (
 -- Verificamos autores para evitar auto-likes:
 -- R1: autor=1. R2: autor=2. R3: autor=3. R4: autor=4. R5: autor=5. R6: autor=6. R7: autor=7. R8: autor=8. R9: autor=10. R10: autor=11. R11: autor=12. R12: autor=13. R13: autor=14. R14: autor=15. R15: autor=16.
 INSERT INTO ME_GUSTA (id_cuenta_mg, id_resena, fecha) VALUES (2, 1, TO_DATE('2025-07-02', 'YYYY-MM-DD'));
-INSERT INTO ME_GUSTA (id_cuenta_mg, id_resena, fecha) VALUES (3, 1, TO_DATE('2025-07-03', 'YYYY-MM-DD'));
+INSERT INTO ME_GUSTA (id_cuenta_mg, id_resena) VALUES (3, 1);
 INSERT INTO ME_GUSTA (id_cuenta_mg, id_resena, fecha) VALUES (1, 2, TO_DATE('2025-07-03', 'YYYY-MM-DD'));
 INSERT INTO ME_GUSTA (id_cuenta_mg, id_resena, fecha) VALUES (4, 3, TO_DATE('2025-07-04', 'YYYY-MM-DD'));
 INSERT INTO ME_GUSTA (id_cuenta_mg, id_resena, fecha) VALUES (5, 3, TO_DATE('2025-07-05', 'YYYY-MM-DD'));
