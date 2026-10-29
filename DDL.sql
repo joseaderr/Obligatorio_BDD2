@@ -319,6 +319,36 @@ BEGIN
     END IF;
 END;
 
+-- G. Restricción de Operación en Interacciones (Cuenta Suspendida no puede dar Me Gusta)
+CREATE OR REPLACE TRIGGER TRG_ME_GUSTA_CUENTA_ACTIVA
+BEFORE INSERT OR UPDATE ON ME_GUSTA
+FOR EACH ROW
+DECLARE
+    v_estado CUENTA.estado%TYPE;
+BEGIN
+    SELECT estado INTO v_estado FROM CUENTA WHERE id_cuenta = :new.id_cuenta_mg;
+    
+    IF v_estado = 'Suspendida' THEN
+        RAISE_APPLICATION_ERROR(-20007, 'Error: Una cuenta suspendida no puede dar Me Gusta a las reseñas.');
+    END IF;
+END;
+/
+
+-- H. Restricción de Operación en Respuestas (Cuenta Suspendida no puede responder a una reseña)
+CREATE OR REPLACE TRIGGER TRG_RESPUESTA_CUENTA_ACTIVA
+BEFORE INSERT OR UPDATE ON RESPUESTA
+FOR EACH ROW
+DECLARE
+    v_estado CUENTA.estado%TYPE;
+BEGIN
+    SELECT estado INTO v_estado FROM CUENTA WHERE id_cuenta = :new.id_cuenta_prop;
+    
+    IF v_estado = 'Suspendida' THEN
+        RAISE_APPLICATION_ERROR(-20008, 'Error: Una cuenta propietaria suspendida no puede publicar respuestas.');
+    END IF;
+END;
+/
+
 
 -- Recalcula los promedios después de cada sentencia que modifica reseñas.
 -- TODO: esto me gustaria hacer algo mas prolijo.
