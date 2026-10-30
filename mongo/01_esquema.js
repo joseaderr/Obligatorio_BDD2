@@ -1,14 +1,4 @@
-// ============================================================================
-// Parte 4 - Ubicación en tiempo real
-// Creación de colecciones, schema validators e índices (MongoDB 5.0+)
-//
-// Ejecutar con:
-//   mongosh "mongodb://localhost:27017" mongo/01_esquema.js
-//
-// OJO: el script elimina y recrea las colecciones. Es solo para desarrollo.
-// ============================================================================
-
-const conn = db.getSiblingDB("maps_tiempo_real");
+const conn = db.getSiblingDB("maps");
 
 conn.vehiculos.drop();
 conn.reportes.drop();
