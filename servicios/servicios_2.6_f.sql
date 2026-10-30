@@ -4,9 +4,9 @@
  * un lugar que administra. 
  **************************************************************************************************/
 CREATE OR REPLACE PROCEDURE RESPONDER_RESENA ( 
-    pIdResena IN NUMBER, 
-    pIdPropietario IN NUMBER, 
-    pRespuesta IN VARCHAR2 -- Cambiado estrictamente a VARCHAR2
+    pIdResena IN RESENA.ID_RESENA%TYPE, 
+    pIdPropietario IN CUENTA.ID_CUENTA%TYPE, 
+    pRespuesta IN RESPUESTA.TEXTO%TYPE 
 ) 
 AS
 	resultado_select NUMERIC;	
@@ -65,21 +65,15 @@ BEGIN
 		JOIN LUGAR l ON l.ID_LUGAR = r.ID_LUGAR
 		WHERE 
 			l.ESTADO = 'Cerrado definitivamente';
-		IF( resultado_select=0 ) THEN
+		IF( resultado_select>0 ) THEN
 	        RAISE_APPLICATION_ERROR(-20107, 'Error: No se puede responder una reseña sobre un lugar Cerrado definitivamente.');
 	    END IF;
 	/************** FIN DE VALIDACION DE PARÁMETROS **************/
     
     INSERT INTO RESPUESTA ( ID_RESENA, ID_CUENTA_PROP, TEXTO ) VALUES ( pIdResena, pIdPropietario, pRespuesta );
-END;
-
-BEGIN
-	RESPONDER_RESENA( 1, 15, 'Restpueatdasd');
-END;
-
-
-SELECT *
-FROM USER_ERRORS 
-WHERE name = 'RESPONDER_RESENA' 
-  AND type = 'PROCEDURE'
-ORDER BY sequence;
+    COMMIT;
+    EXCEPTION
+    	WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END RESPONDER_RESENA;
