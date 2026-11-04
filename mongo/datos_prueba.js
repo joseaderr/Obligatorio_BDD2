@@ -62,16 +62,18 @@ const vehiculos = [
     }
 ];
 
-const reporte = (n, idVehiculo, codigoLinea, fecha, longitud, latitud, velocidad, destino, extras = {}) => ({
-    _id: ObjectId(n.toString(16).padStart(24, "0")),
-    id_vehiculo: NumberLong(String(idVehiculo)),
-    linea: codigoLinea,
-    ubicacion: { type: "Point", coordinates: [longitud, latitud] },
-    fecha: ISODate(fecha),
-    velocidad,
-    destino,
-    extras
-});
+const reporte = (n, idVehiculo, codigoLinea, fecha, longitud, latitud, velocidad, destino, extras = {}) => {
+    const doc = {
+        _id: ObjectId(n.toString(16).padStart(24, "0")),
+        id_vehiculo: NumberLong(String(idVehiculo)),
+        linea: codigoLinea,
+        ubicacion: { type: "Point", coordinates: [longitud, latitud] },
+        fecha: ISODate(fecha),
+        velocidad: new Double(velocidad),
+        destino
+    };
+    return Object.assign(doc, extras);
+};
 
 // Montevideo: punto de referencia Plaza Independencia (-56.2036, -34.9057).
 // Incluye posiciones dentro y fuera de 1 km; 3002 aún no reportó posición.

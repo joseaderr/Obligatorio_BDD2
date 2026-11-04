@@ -24,13 +24,13 @@ En Revision
 
 ## Parte 4
 
-En progreso - Agus
+Pronto - Agus
 
 ## Parte 5
 
 _aunque diga que depende de parte 4, ir arrancando con lo que se tiene_
 
-1) Agus 
+1) Agus - Pronto
 2) Freddy
 3) Jose
 4) Freddy
@@ -56,6 +56,12 @@ docker compose exec mongodb mongosh "mongodb://localhost:27017" /scripts/01_esqu
 ```
 
 **Atención:** el script elimina y vuelve a crear las colecciones `vehiculos` y `reportes`; ejecutarlo nuevamente borra los documentos existentes en ellas.
+
+para crear datos de prueba en las colecciones
+
+```sh
+docker compose exec -T mongodb mongosh < mongo/datos_prueba.js
+```
 
 Para detener los contenedores sin borrar los datos:
 

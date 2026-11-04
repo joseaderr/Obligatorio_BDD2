@@ -106,7 +106,6 @@ Coleccion de datos sobre vehiculos, se guardan los datos necesarios sobre el mis
         fecha: date, //required
         velocidad: double, //required
         destino: string, //required
-        extras: {}
     }
 ```
 
