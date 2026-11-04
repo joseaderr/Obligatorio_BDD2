@@ -66,3 +66,52 @@ BEGIN
         ROLLBACK;
         RAISE;
 END MG_RESENA;
+
+
+
+/**********************************************************************
+ * Actualiza los puntos de la cuenta guía ingresada como parámetro
+ * Si la cuenta ingresada es cuenta común pero no cuenta guía, crea
+ * una cuenta guía y actualiza los puntos.
+ * Se definen los parámetros, que definen el valor en puntos asociado a 
+ * cada me gusta y cada reseña
+ * 		*pMultiplicadorPuntosMeGusta
+ * 		*pMultiplicadorPuntosReseña
+ **********************************************************************/
+CREATE OR REPLACE PROCEDURE ACTUALIZAR_PUNTOS_CUENTA_GUIA ( 
+    pIdCuenta IN NUMBER
+) 
+AS
+	pMultiplicadorPuntosMeGusta NUMERIC DEFAULT 1;
+	pMultiplicadorPuntosReseña NUMERIC DEFAULT 2;
+	pResultado_select NUMERIC;
+	pPuntos_generados NUMERIC DEFAULT 0;
+	pCuenta_es_guia_local NUMERIC;
+BEGIN
+	SELECT COUNT(*) INTO pResultado_select  FROM CUENTA c WHERE c.ID_CUENTA = pIdCuenta;
+	IF( pResultado_select = 0 ) THEN 
+        RAISE_APPLICATION_ERROR(-21001, 'Error: El usuario no existe.');
+	END IF;
+
+	SELECT 
+		COUNT( DISTINCT r.ID_RESENA ) * pMultiplicadorPuntosReseña + 
+		COUNT( DISTINCT m.ID_ME_GUSTA ) * pMultiplicadorPuntosMeGusta
+			INTO pPuntos_generados 
+	FROM CUENTA c
+	LEFT JOIN RESENA r ON r.ID_CUENTA=c.ID_CUENTA
+	LEFT JOIN ME_GUSTA m ON m.ID_RESENA=r.ID_RESENA
+	WHERE 
+		r.ID_CUENTA = pIdCuenta;
+
+	SELECT COUNT(*) INTO pCuenta_es_guia_local FROM CUENTA_GUIA_LOCAL c WHERE c.ID_CUENTA = pIdCuenta;
+
+	IF( pPuntos_generados>0 AND pCuenta_es_guia_local=0 ) THEN
+		INSERT INTO CUENTA_GUIA_LOCAL
+		(ID_CUENTA)
+		VALUES (pIdCuenta);
+	END IF;
+
+	IF( pPuntos_generados>0 ) THEN
+		UPDATE CUENTA_GUIA_LOCAL c SET PUNTOS = pPuntos_generados WHERE c.ID_CUENTA = pIdCuenta;
+	END IF;
+END;
