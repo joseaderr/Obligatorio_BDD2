@@ -125,8 +125,8 @@ conn.createCollection("vehiculos", {
 
 // ============================================================================
 // 2. reportes
-//    Una medición por documento. Los datos variables van en "extras",
-//    que queda abierto para incorporar nuevos tipos sin tocar el esquema.
+//    Una medición por documento. Se permiten campos adicionales en la raíz
+//    para incorporar nuevos datos sin tocar el esquema.
 // ============================================================================
 conn.createCollection("reportes", {
     validator: {
@@ -134,7 +134,7 @@ conn.createCollection("reportes", {
             bsonType: "object",
             // Si se permiten reportes de vehículos sin línea, quitar "linea"
             required: ["_id", "id_vehiculo", "linea", "ubicacion", "fecha", "velocidad", "destino"],
-            additionalProperties: false,
+            additionalProperties: true,
             properties: {
                 _id: { bsonType: "objectId" },
                 id_vehiculo: { bsonType: "long", description: "Referencia a vehiculos._id" },
@@ -159,8 +159,7 @@ conn.createCollection("reportes", {
                 },
                 fecha: { bsonType: "date" },
                 velocidad: { bsonType: "double", minimum: 0 },
-                destino: { bsonType: "string", minLength: 1 },
-                extras: { bsonType: "object" }
+                destino: { bsonType: "string", minLength: 1 }
             }
         }
     },
