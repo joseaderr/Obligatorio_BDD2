@@ -50,7 +50,7 @@ BEGIN
 	        RAISE_APPLICATION_ERROR(-20116, 'Error: El usuario ya indicó que le gusta la reseña.');
 		END IF;
 	/************** FIN DE VALIDACION DE PARÁMETROS **************/
-
+	
 	SELECT r.ID_CUENTA INTO pIdCuentaResena FROM RESENA r WHERE r.ID_RESENA = pIdResena FOR UPDATE;
 	
     INSERT INTO ME_GUSTA m
@@ -58,6 +58,7 @@ BEGIN
     VALUES
     (pIdCuenta, pIdResena);
 	
+    /* la cuenta asociada a pIdCuentaResena ya escribió una reseña, por lo tanto ya es guía local */
 	ACTUALIZAR_PUNTOS_CUENTA_GUIA( pIdCuentaResena );
 	COMMIT;
 	
@@ -71,9 +72,7 @@ END MG_RESENA;
 
 /**********************************************************************
  * Actualiza los puntos de la cuenta guía ingresada como parámetro
- * Si la cuenta ingresada es cuenta común pero no cuenta guía, crea
- * una cuenta guía y actualiza los puntos.
- * Se definen los parámetros, que definen el valor en puntos asociado a 
+ * Se definen los parámetros que determinan el valor en puntos asociado a 
  * cada me gusta y cada reseña
  * 		*pMultiplicadorPuntosMeGusta
  * 		*pMultiplicadorPuntosReseña
@@ -86,11 +85,10 @@ AS
 	pMultiplicadorPuntosReseña NUMERIC DEFAULT 2;
 	pResultado_select NUMERIC;
 	pPuntos_generados NUMERIC DEFAULT 0;
-	pCuenta_es_guia_local NUMERIC;
 BEGIN
-	SELECT COUNT(*) INTO pResultado_select  FROM CUENTA c WHERE c.ID_CUENTA = pIdCuenta;
+	SELECT COUNT(*) INTO pResultado_select  FROM CUENTA_GUIA_LOCAL c WHERE c.ID_CUENTA = pIdCuenta;
 	IF( pResultado_select = 0 ) THEN 
-        RAISE_APPLICATION_ERROR(-21001, 'Error: El usuario no existe.');
+        RAISE_APPLICATION_ERROR(-21001, 'Error: La cuenta no existe o es cuenta guía.');
 	END IF;
 
 	SELECT 
@@ -103,15 +101,30 @@ BEGIN
 	WHERE 
 		r.ID_CUENTA = pIdCuenta;
 
-	SELECT COUNT(*) INTO pCuenta_es_guia_local FROM CUENTA_GUIA_LOCAL c WHERE c.ID_CUENTA = pIdCuenta;
+	IF( pPuntos_generados>0 ) THEN
+		UPDATE CUENTA_GUIA_LOCAL c SET PUNTOS = pPuntos_generados WHERE c.ID_CUENTA = pIdCuenta;
+	END IF;
+END ACTUALIZAR_PUNTOS_CUENTA_GUIA;
 
-	IF( pPuntos_generados>0 AND pCuenta_es_guia_local=0 ) THEN
+/**********************************************************************
+ * Dada una cuenta, si no existe una Cuenta Gúia local asociada la crea
+ **********************************************************************/
+CREATE OR REPLACE PROCEDURE CREAR_CUENTA_GUIA_LOCAL_SI_NO_EXISTE ( 
+    pIdCuenta IN NUMBER
+) 
+AS
+	pResultado_select NUMERIC;
+BEGIN
+	SELECT COUNT(*) INTO pResultado_select  FROM CUENTA c WHERE c.ID_CUENTA = pIdCuenta;
+	IF( pResultado_select = 0 ) THEN 
+        RAISE_APPLICATION_ERROR(-21001, 'Error: La cuenta no existe.');
+	END IF;
+
+	SELECT COUNT(*) INTO pResultado_select FROM CUENTA_GUIA_LOCAL c WHERE c.ID_CUENTA = pIdCuenta;
+
+	IF( pResultado_select=0 ) THEN
 		INSERT INTO CUENTA_GUIA_LOCAL
 		(ID_CUENTA)
 		VALUES (pIdCuenta);
 	END IF;
-
-	IF( pPuntos_generados>0 ) THEN
-		UPDATE CUENTA_GUIA_LOCAL c SET PUNTOS = pPuntos_generados WHERE c.ID_CUENTA = pIdCuenta;
-	END IF;
-END;
+END CREAR_CUENTA_GUIA_LOCAL_SI_NO_EXISTE;
