@@ -365,3 +365,15 @@ BEGIN
     );
 END;
 
+
+-- Cubre el caso de que un usuario que no es guía local publique una reseña, para crear automáticamente la cuenta de guía local si no existe.
+CREATE OR REPLACE TRIGGER TRG_RESENA_GUIA_LOCAL
+    BEFORE INSERT OR UPDATE ON RESENA
+FOR EACH ROW
+BEGIN
+    CREAR_CUENTA_GUIA_LOCAL_SI_NO_EXISTE(:new.id_cuenta);
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20009, 'Error: No se pudo crear la cuenta de guía local automáticamente.');
+END;
+
