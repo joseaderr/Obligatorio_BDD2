@@ -1,17 +1,17 @@
 // Requerimiento 5.4: Mostrar el historial de asignaciones de una línea, con los datos de cada vehículo que la prestó.
 
-// Ejemplo para la linea L42
+// Ejemplo para la linea 104
 db.vehiculos.aggregate([
     {
-		//Utilizando el indice ix_vehiculos_linea descarta los vehículos que nunca estuvieron asignados a la linea L42
-        $match: { "lineas.codigo": "L42" }
+		//Utilizando el indice ix_vehiculos_linea descarta los vehículos que nunca estuvieron asignados a la linea 104
+        $match: { "lineas.codigo": "104" }
     },
     {
         $unwind: "$lineas"
     },
     {
-		// Obtiene el vehículo asociado sólo a la linea L42
-        $match: { "lineas.codigo": "L42" }
+		// Obtiene el vehículo asociado sólo a la linea 104
+        $match: { "lineas.codigo": "104" }
     },
     {
         $sort: { "lineas.fechaDesde": -1 }
