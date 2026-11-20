@@ -15,6 +15,7 @@ create or replace procedure PRC_transferir_titularidad(
 ) as
     admin_actual LUGAR.ID_CUENTA_ADMIN%type;
     fecha_verificacion CUENTA_PROPIETARIA.FECHA_VERIFICACION%type;
+	cantRegistros int;
     LUGAR_SIN_ADMIN_ERR Exception;
     LUGAR_REQ_ERR Exception;
     CUENTA_DESTINO_REQ_ERR Exception;
@@ -30,17 +31,21 @@ begin
         raise CUENTA_ORIGEN_REQ_ERR;
 end if;
 
+SELECT count(1) into cantRegistros FROM LUGAR l WHERE l.ID_LUGAR = lugar_id;
+
+if( cantRegistros = 0 ) then
+        raise LUGAR_SIN_ADMIN_ERR;
+END IF;
+
 SELECT l.ID_CUENTA_ADMIN into admin_actual FROM LUGAR l WHERE l.ID_LUGAR = lugar_id;
 
-if(admin_actual is null ) then
-        raise LUGAR_SIN_ADMIN_ERR;
-    elsif (admin_actual <> cuenta_id_origen) then
+if (admin_actual <> cuenta_id_origen) then
         raise CUENTA_ORIGEN_ERR;
 end if;
 
-SELECT cd.FECHA_VERIFICACION into fecha_verificacion from CUENTA_PROPIETARIA cd where cd.ID_CUENTA = cuenta_id_destino;
+SELECT COUNT(cd.FECHA_VERIFICACION) into cantRegistros from CUENTA_PROPIETARIA cd where cd.ID_CUENTA = cuenta_id_destino;
 
-if (fecha_verificacion is null) then
+if (cantRegistros = 0) then
         raise CUENTA_DESTINO_NO_VERIF_ERR;
 end if;
 
@@ -60,3 +65,6 @@ when CUENTA_DESTINO_NO_VERIF_ERR then
 when CUENTA_ORIGEN_ERR then
         raise_application_error(-20015,'La cuenta de origen no es propietaria del lugar.');
 end;
+
+
+
