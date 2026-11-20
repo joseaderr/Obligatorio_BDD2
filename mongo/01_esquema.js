@@ -150,14 +150,16 @@ conn.createCollection("reportes", {
                             minItems: 2,
                             maxItems: 2,
                             items: [
-                                { bsonType: "double", minimum: -180, maximum: 180 },
-                                { bsonType: "double", minimum: -90, maximum: 90 }
+                                // Se aceptan enteros: un cliente puede enviar -56 en vez de -56.0
+                                { bsonType: ["double", "int", "long"], minimum: -180, maximum: 180 },
+                                { bsonType: ["double", "int", "long"], minimum: -90, maximum: 90 }
                             ]
                         }
                     }
                 },
                 fecha: { bsonType: "date" },
-                velocidad: { bsonType: "double", minimum: 0 },
+                // Se aceptan enteros: un vehículo detenido puede reportar 0 (int) en vez de 0.0
+                velocidad: { bsonType: ["double", "int", "long"], minimum: 0 },
                 destino: { bsonType: "string", minLength: 1 }
             }
         }
