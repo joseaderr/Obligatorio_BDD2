@@ -1,23 +1,19 @@
--- ============================================================================
--- SCRIPT DDL COMPLETO ACTUALIZADO PARA ORACLE DATABASE
--- Generado el: 07/10/2026
--- ============================================================================
 
 -- LIMPIEZA DE TABLAS Y VISTAS PREVIAS (Opcional, descomentar si es necesario)
-DROP TABLE RESPUESTA CASCADE CONSTRAINTS;
-DROP TABLE ME_GUSTA CASCADE CONSTRAINTS;
-DROP TABLE RESENA CASCADE CONSTRAINTS;
-DROP TABLE FOTOGRAFIA CASCADE CONSTRAINTS;
-DROP TABLE HORARIO CASCADE CONSTRAINTS;
-DROP TABLE LUGAR_CATEGORIA_SECUNDARIA CASCADE CONSTRAINTS;
-DROP TABLE LUGAR CASCADE CONSTRAINTS;
-DROP TABLE CATEGORIA CASCADE CONSTRAINTS;
-DROP TABLE CUENTA_PROPIETARIA CASCADE CONSTRAINTS;
-DROP TABLE CUENTA_GUIA_LOCAL CASCADE CONSTRAINTS;
-DROP TABLE CUENTA_TELEFONO CASCADE CONSTRAINTS;
-DROP TABLE CUENTA CASCADE CONSTRAINTS;
-DROP TABLE LUGAR_TELEFONO CASCADE CONSTRAINTS;
-DROP TABLE LUGAR_WEB CASCADE CONSTRAINTS;
+-- DROP TABLE RESPUESTA CASCADE CONSTRAINTS;
+-- DROP TABLE ME_GUSTA CASCADE CONSTRAINTS;
+-- DROP TABLE RESENA CASCADE CONSTRAINTS;
+-- DROP TABLE FOTOGRAFIA CASCADE CONSTRAINTS;
+-- DROP TABLE HORARIO CASCADE CONSTRAINTS;
+-- DROP TABLE LUGAR_CATEGORIA_SECUNDARIA CASCADE CONSTRAINTS;
+-- DROP TABLE LUGAR CASCADE CONSTRAINTS;
+-- DROP TABLE CATEGORIA CASCADE CONSTRAINTS;
+-- DROP TABLE CUENTA_PROPIETARIA CASCADE CONSTRAINTS;
+-- DROP TABLE CUENTA_GUIA_LOCAL CASCADE CONSTRAINTS;
+-- DROP TABLE CUENTA_TELEFONO CASCADE CONSTRAINTS;
+-- DROP TABLE CUENTA CASCADE CONSTRAINTS;
+-- DROP TABLE LUGAR_TELEFONO CASCADE CONSTRAINTS;
+-- DROP TABLE LUGAR_WEB CASCADE CONSTRAINTS;
 
 -- ============================================================================
 -- 1. TABLAS MAESTRAS Y JERARQUÍA DE CUENTAS
@@ -31,7 +27,6 @@ CREATE TABLE CUENTA (
     idioma           VARCHAR2(50)  NOT NULL,
     fecha_creacion   DATE DEFAULT SYSDATE NOT NULL,
     estado           VARCHAR2(20) DEFAULT 'Activa' NOT NULL,
-    -- Restricciones de Entidad y Dominio
     CONSTRAINT PK_CUENTA PRIMARY KEY (id_cuenta),
     CONSTRAINT UQ_CUENTA_EMAIL UNIQUE (email),
     CONSTRAINT CK_CUENTA_ESTADO CHECK (estado IN ('Activa', 'Suspendida'))
@@ -51,7 +46,6 @@ CREATE TABLE CUENTA_GUIA_LOCAL (
     puntos			 NUMBER(6,0) DEFAULT 0 NOT NULL,
     nivel            NUMBER(1,0) DEFAULT 1 NOT NULL,
     fecha_ingreso    DATE DEFAULT SYSDATE NOT NULL,
-    -- Restricciones estructurales
     CONSTRAINT PK_CUENTA_GUIA_LOCAL PRIMARY KEY (id_cuenta),
     CONSTRAINT FK_GUIA_CUENTA FOREIGN KEY (id_cuenta)
         REFERENCES CUENTA(id_cuenta) ON DELETE CASCADE,
@@ -64,7 +58,6 @@ CREATE TABLE CUENTA_PROPIETARIA (
     razon_social        VARCHAR2(200) NOT NULL,
     metodo_verificacion VARCHAR2(20) NOT NULL,
     fecha_verificacion  DATE,
-    -- Restricciones estructurales
     CONSTRAINT PK_CUENTA_PROPIETARIA PRIMARY KEY (id_cuenta),
     CONSTRAINT FK_PROPIETARIA_CUENTA FOREIGN KEY (id_cuenta)
         REFERENCES CUENTA(id_cuenta) ON DELETE CASCADE,
@@ -98,8 +91,7 @@ CREATE TABLE LUGAR (
     estado                  VARCHAR2(25) DEFAULT 'Operativo' NOT NULL,
     id_categoria_principal  NUMBER NOT NULL,
     id_lugar_contenedor     NUMBER,
-    id_cuenta_admin         NUMBER, -- Referencia opcional a una cuenta propietaria
-    -- Restricciones
+    id_cuenta_admin         NUMBER,
     CONSTRAINT PK_LUGAR PRIMARY KEY (id_lugar),
     CONSTRAINT CK_LUGAR_ESTADO CHECK (estado IN ('Operativo', 'Cerrado temporalmente', 'Cerrado definitivamente')),
     CONSTRAINT FK_LUGAR_CATEGORIA FOREIGN KEY (id_categoria_principal)
@@ -108,7 +100,6 @@ CREATE TABLE LUGAR (
         REFERENCES LUGAR(id_lugar),
     CONSTRAINT FK_LUGAR_ADMINISTRADOR FOREIGN KEY (id_cuenta_admin)
         REFERENCES CUENTA_PROPIETARIA(id_cuenta) ON DELETE SET NULL,
-    -- No Autocontención
     CONSTRAINT CK_LUGAR_NO_AUTOCONTENCION CHECK (id_lugar_contenedor IS NULL OR (id_lugar_contenedor <> id_lugar))
 );
 
@@ -149,11 +140,9 @@ CREATE TABLE HORARIO (
     dia_semana       VARCHAR2(15) NOT NULL,
     hora_apertura    TIMESTAMP NOT NULL,
     hora_cierre      TIMESTAMP NOT NULL,
-    -- Restricciones de Entidad Débil
     CONSTRAINT PK_HORARIO PRIMARY KEY (id_lugar, dia_semana, hora_apertura),
     CONSTRAINT FK_HORARIO_LUGAR FOREIGN KEY (id_lugar)
         REFERENCES LUGAR(id_lugar) ON DELETE CASCADE,
-    -- Coherencia Horaria
     CONSTRAINT CK_HORARIO_COHERENCIA CHECK (hora_cierre > hora_apertura)
 );
 
@@ -165,7 +154,6 @@ CREATE TABLE FOTOGRAFIA (
     fecha_subida     DATE DEFAULT TRUNC(SYSDATE) NOT NULL,
     descripcion      VARCHAR2(255),
     id_cuenta_sube   NUMBER,
-    -- Restricciones
     CONSTRAINT PK_FOTOGRAFIA PRIMARY KEY (id_lugar, numero_foto),
     CONSTRAINT FK_FOTOGRAFIA_LUGAR FOREIGN KEY (id_lugar)
         REFERENCES LUGAR(id_lugar) ON DELETE CASCADE,
@@ -179,16 +167,14 @@ CREATE TABLE FOTOGRAFIA (
 -- ============================================================================
 
 CREATE TABLE RESENA (
-    id_resena        NUMBER GENERATED BY DEFAULT AS IDENTITY, -- Clave Primaria Única
+    id_resena        NUMBER GENERATED BY DEFAULT AS IDENTITY,
     id_cuenta        NUMBER NOT NULL,
     id_lugar         NUMBER NOT NULL,
     puntaje          NUMBER(1,0) NOT NULL,
     texto            VARCHAR2(255),
     fecha            DATE DEFAULT TRUNC(SYSDATE) NOT NULL,
     idioma           VARCHAR2(50) NOT NULL,
-    -- Restricciones
     CONSTRAINT PK_RESENA PRIMARY KEY (id_resena),
-    -- Clave alternativa para evitar duplicidades de un usuario en un mismo lugar
     CONSTRAINT UQ_RESENA_CUENTA_LUGAR UNIQUE (id_cuenta, id_lugar),
     CONSTRAINT FK_RESENA_CUENTA FOREIGN KEY (id_cuenta) REFERENCES CUENTA(id_cuenta),
     CONSTRAINT FK_RESENA_LUGAR FOREIGN KEY (id_lugar) REFERENCES LUGAR(id_lugar),
@@ -196,27 +182,23 @@ CREATE TABLE RESENA (
 );
 
 CREATE TABLE ME_GUSTA (
-    id_me_gusta      NUMBER GENERATED BY DEFAULT AS IDENTITY, -- Clave Primaria Única
+    id_me_gusta      NUMBER GENERATED BY DEFAULT AS IDENTITY,
     id_cuenta_mg     NUMBER NOT NULL,
     id_resena        NUMBER NOT NULL,
     fecha            TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    -- Restricciones
     CONSTRAINT PK_ME_GUSTA PRIMARY KEY (id_me_gusta),
-    -- Clave alternativa para asegurar que un usuario solo interactúe una vez por reseña
     CONSTRAINT UQ_ME_GUSTA_CUENTA_RESENA UNIQUE (id_cuenta_mg, id_resena),
     CONSTRAINT FK_MG_CUENTA FOREIGN KEY (id_cuenta_mg) REFERENCES CUENTA(id_cuenta),
     CONSTRAINT FK_MG_RESENA FOREIGN KEY (id_resena) REFERENCES RESENA(id_resena) ON DELETE CASCADE
 );
 
 CREATE TABLE RESPUESTA (
-    id_respuesta        NUMBER GENERATED BY DEFAULT AS IDENTITY, -- Clave Primaria Única
+    id_respuesta        NUMBER GENERATED BY DEFAULT AS IDENTITY,
     id_resena           NUMBER NOT NULL,
     id_cuenta_prop      NUMBER NOT NULL,
     texto               VARCHAR2(255) NOT NULL,
     fecha_publicacion   DATE DEFAULT TRUNC(SYSDATE) NOT NULL,
-    -- Restricciones
     CONSTRAINT PK_RESPUESTA PRIMARY KEY (id_respuesta),
-    -- Clave alternativa para asegurar una respuesta como máximo por reseña (1 a 1 opcional)
     CONSTRAINT UQ_RESPUESTA_RESENA UNIQUE (id_resena),
     CONSTRAINT FK_RESPUESTA_RESENA FOREIGN KEY (id_resena) REFERENCES RESENA(id_resena) ON DELETE CASCADE,
     CONSTRAINT FK_RESPUESTA_PROPIETARIA FOREIGN KEY (id_cuenta_prop) REFERENCES CUENTA_PROPIETARIA(id_cuenta)
@@ -227,7 +209,7 @@ CREATE TABLE RESPUESTA (
 -- 5. DISPARADORES (TRIGGERS) PARA REGLAS DE NEGOCIO SEMÁNTICAS
 -- ============================================================================
 
--- A. Restricción de Operación (Cuentas Suspendidas)
+-- Restricción de Operación (Cuentas Suspendidas)
 CREATE OR REPLACE TRIGGER TRG_RESENA_CUENTA_ACTIVA
 BEFORE INSERT OR UPDATE ON RESENA
 FOR EACH ROW
@@ -241,7 +223,7 @@ BEGIN
 END;
 
 
--- B. Límite Diario de Reseñas (Tope de 5 por fecha)
+-- Límite Diario de Reseñas (Tope de 5 por fecha)
 CREATE OR REPLACE TRIGGER TRG_RESENA_LIMITE_DIARIO
 BEFORE INSERT ON RESENA
 FOR EACH ROW
@@ -258,7 +240,7 @@ BEGIN
 END;
 
 
--- C. Lugar Cerrado Definitivamente
+-- Lugar Cerrado Definitivamente
 CREATE OR REPLACE TRIGGER TRG_RESENA_LUGAR_OPERATIVO
 BEFORE INSERT ON RESENA
 FOR EACH ROW
@@ -272,7 +254,7 @@ BEGIN
 END;
 
 
--- D. No Auto-Like (Validación con el ID único de Reseña)
+-- No Auto-Like (Validación con el ID único de Reseña)
 CREATE OR REPLACE TRIGGER TRG_ME_GUSTA_NO_AUTOLIKE
 BEFORE INSERT OR UPDATE ON ME_GUSTA
 FOR EACH ROW
@@ -287,7 +269,7 @@ BEGIN
 END;
 
 
--- E. Coherencia Temporal de Respuesta
+-- Coherencia Temporal de Respuesta
 CREATE OR REPLACE TRIGGER TRG_RESPUESTA_COHERENCIA_TEMP
 BEFORE INSERT OR UPDATE ON RESPUESTA
 FOR EACH ROW
@@ -302,7 +284,7 @@ BEGIN
 END;
 
 
--- F. Autorización de Respuesta (Propietario Administrador)
+-- Autorización de Respuesta (Propietario Administrador)
 CREATE OR REPLACE TRIGGER TRG_RESPUESTA_AUTORIZACION
 BEFORE INSERT OR UPDATE ON RESPUESTA
 FOR EACH ROW
@@ -319,7 +301,7 @@ BEGIN
     END IF;
 END;
 
--- G. Restricción de Operación en Interacciones (Cuenta Suspendida no puede dar Me Gusta)
+-- Restricción de Operación en Interacciones (Cuenta Suspendida no puede dar Me Gusta)
 CREATE OR REPLACE TRIGGER TRG_ME_GUSTA_CUENTA_ACTIVA
 BEFORE INSERT OR UPDATE ON ME_GUSTA
 FOR EACH ROW
@@ -334,7 +316,7 @@ BEGIN
 END;
 /
 
--- H. Restricción de Operación en Respuestas (Cuenta Suspendida no puede responder a una reseña)
+-- Restricción de Operación en Respuestas (Cuenta Suspendida no puede responder a una reseña)
 CREATE OR REPLACE TRIGGER TRG_RESPUESTA_CUENTA_ACTIVA
 BEFORE INSERT OR UPDATE ON RESPUESTA
 FOR EACH ROW
@@ -351,7 +333,6 @@ END;
 
 
 -- Recalcula los promedios después de cada sentencia que modifica reseñas.
--- TODO: esto me gustaria hacer algo mas prolijo.
 CREATE OR REPLACE TRIGGER TRG_RESENA_LUGAR
     AFTER INSERT OR UPDATE ON RESENA
 BEGIN

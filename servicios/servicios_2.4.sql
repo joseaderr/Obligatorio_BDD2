@@ -4,8 +4,8 @@ CREATE OR REPLACE FUNCTION fn_calcular_puntos_lugar(id_lugar LUGAR.ID_LUGAR%type
     RETURN LUGAR.PUNTOS%type is puntosLugar LUGAR.PUNTOS%type;
 begin
 SELECT NVL(avg(r.puntaje),0) INTO puntosLugar FROM RESENA r -- Controla el caso de que la consulta no tenga ningun registro a devolver y transforma el NULL en 0.
-                                                       JOIN CUENTA c ON c.ID_CUENTA = r.ID_CUENTA
-WHERE c.estado <> 'Suspendida' AND r.ID_LUGAR = id_lugar;
+    JOIN CUENTA c ON c.ID_CUENTA = r.ID_CUENTA
+    WHERE c.estado <> 'Suspendida' AND r.ID_LUGAR = id_lugar;
 return puntosLugar;
 end;
 
