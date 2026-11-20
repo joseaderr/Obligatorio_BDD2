@@ -48,15 +48,14 @@ DECLARE
 BEGIN
     -- Obtenemos el cursor invocando la función
     v_ranking := OBTENER_CURSOR_RANKING_MG(pCiudad => 'Montevideo', pIdCategoriaPpal => 4);
-    -- Recorremos el cursor fila por fila
+
     LOOP
         FETCH v_ranking INTO v_nombre, v_nivel, v_total_likes, ranking_puntaje;
-        EXIT WHEN v_ranking%NOTFOUND; -- Termina cuando ya no hay más filas
+        EXIT WHEN v_ranking%NOTFOUND;
         
         -- Imprimimos el resultado en la consola de salida
         DBMS_OUTPUT.PUT_LINE('Nombre guía: ' || v_nombre || ' | Nivel: ' || v_nivel || ' | cant. MG: ' || v_total_likes || ' | ranking: ' || ranking_puntaje );
     END LOOP;
     
-    -- Cerramos el cursor
     CLOSE v_ranking;
 END;
