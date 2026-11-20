@@ -132,7 +132,6 @@ conn.createCollection("reportes", {
     validator: {
         $jsonSchema: {
             bsonType: "object",
-            // Si se permiten reportes de vehículos sin línea, quitar "linea"
             required: ["_id", "id_vehiculo", "linea", "ubicacion", "fecha", "velocidad", "destino"],
             additionalProperties: true,
             properties: {
@@ -171,25 +170,25 @@ conn.createCollection("reportes", {
 // 3. Índices
 // ============================================================================
 
-// 5.1 / 5.4: vehículos por línea
+
 conn.vehiculos.createIndex(
     { "lineas.codigo": 1 },
     { name: "ix_vehiculos_linea" }
 );
 
-// 5.1 y 5.3: último reporte / recorrido de un vehículo
+
 conn.reportes.createIndex(
     { id_vehiculo: 1, fecha: -1 },
     { name: "ix_reportes_vehiculo_fecha" }
 );
 
-// 5.1 por línea / analítica
+
 conn.reportes.createIndex(
     { linea: 1, fecha: -1 },
     { name: "ix_reportes_linea_fecha" }
 );
 
-// 5.2: proximidad geográfica
+
 conn.reportes.createIndex(
     { ubicacion: "2dsphere" },
     { name: "ix_reportes_geo" }
